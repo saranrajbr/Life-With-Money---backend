@@ -30,8 +30,14 @@ router.post("/login",async(req,res)=>{
 
 
 router.post("/google",async(req,res)=>{
+try{
+console.log("📥 Google auth endpoint hit");
+    console.log("🔑 GOOGLE_CLIENT_ID exists:", !!process.env.GOOGLE_CLIENT_ID);
+
     const {token}=req.body;
     if(!token){
+        console.log("❌ No token provided");
+
         return res.status(400).json({msg:"Token missing"});
     }
     const ticket=await client.verifyIdToken({
@@ -41,9 +47,18 @@ router.post("/google",async(req,res)=>{
 
     const payload=ticket.getPayload();
     if (!payload){
+
+
+        console.log("❌ No payload from token");
+
+
         return res.status(400).json({msg:"Invalid token payload"})
     }
     const {email,sub,email_verified}=payload;
+
+    console.log("✅ Token verified for email:", email);
+        console.log("📧 Email verified:", email_verified);
+
     if(!email){res.status(400).json({msg:"Email not available"})}
     
     if(!email_verified){res.status(400).json({msg:"Email not verified by google"})};
@@ -53,7 +68,17 @@ router.post("/google",async(req,res)=>{
     }
 
     const jwttoken=jwt.sign({id:user._id},process.env.JWT_SECRET,{expiresIn:"8d"});
+
+    console.log("✅ Login successful for:", email);
+
     res.json({token:jwttoken});
+}catch (error) {
+        console.error("❌ Google auth error:", error.message);
+        if (error.message.includes("audience")) {
+            return res.status(400).json({ msg: "Invalid Google Client ID configuration" });
+        }
+        return res.status(500).json({ msg: "Server error during Google authentication" });
+    }
 });
 
 export default router;

@@ -18,6 +18,16 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Add this TEMPORARY route to check env variables
+app.get("/api/test-env", (req, res) => {
+    res.json({
+        googleClientIdExists: !!process.env.GOOGLE_CLIENT_ID,
+        googleClientIdPrefix: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.substring(0, 10) + '...' : null,
+        jwtSecretExists: !!process.env.JWT_SECRET,
+        port: process.env.PORT
+    });
+});
+
 app.use("/api/auth",authRoutes);
 app.use("/api/expense",expenseRoutes);
 app.listen(2000,()=>console.log("server running"));
