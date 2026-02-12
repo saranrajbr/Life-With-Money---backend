@@ -10,7 +10,8 @@ const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 
 router.post("/register",async (req,res)=>{
-    const {email,password}=req.body;
+    let {email,password}=req.body;
+    email=email.toLowerCase().trim();
     const exists=await User.findOne({email});
     if(exists) return res.status(400).json({msg:"user exist"});
     const hashed=await bcrypt.hash(password,9);
@@ -19,17 +20,22 @@ router.post("/register",async (req,res)=>{
 });
 
 router.post("/login",async(req,res)=>{
-    const {email,password}=req.body;
+    console.log("Manual User ID:", user._id)
+    let {email,password}=req.body;
+    email=email.toLowerCase().trim();
     const user=await User.findOne({email});
     if(!user) return res.status(400).json({msg:"Error"});
     const pass=await bcrypt.compare(password,user.password);
     if(!pass) return res.status(400).json({msg:"Error"});
     const token=jwt.sign({id:user._id},process.env.JWT_SECRET);
     res.json({token});
+
+
 });
 
 
 router.post("/google", async (req, res) => {
+    console.log("Final User ID:", user._id);
     try {
         console.log("Google auth endpoint hit");
         console.log("GOOGLE_CLIENT_ID exists:", !!process.env.GOOGLE_CLIENT_ID);
@@ -56,8 +62,8 @@ router.post("/google", async (req, res) => {
         console.log("User email:", payload.email);
         
         const { email, sub, email_verified } = payload;
-
-        if (!email) {
+        const normalizedEmail=email.toLowerCase().trim();
+        if (!normalizedEmail) {
             return res.status(400).json({ msg: "Email not available" });
         }
 
@@ -66,17 +72,21 @@ router.post("/google", async (req, res) => {
         }
 
         
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email:normalizedEmail });
         if (!user) {
-            console.log("Creating new user:", email);
+            console.log("Creating new user:", normalizedEmail);
             user = await User.create({ 
-                email, 
+                email:normalizedEmail, 
                 googleid: sub 
             });
         } else {
-            console.log("Existing user found:", email);
+            console.log("Existing user found:", normalizedEmail);
+            if (!user.googleid){
+                user.googleid=sub;
+                await user.save();
+            }
         }
-
+         
         const jwttoken = jwt.sign(
             { id: user._id }, 
             process.env.JWT_SECRET, 
@@ -97,6 +107,8 @@ router.post("/google", async (req, res) => {
             details: error.message 
         });
     }
+    
+
 });
 
 export default router;
