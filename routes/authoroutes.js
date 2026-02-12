@@ -20,7 +20,7 @@ router.post("/register",async (req,res)=>{
 });
 
 router.post("/login",async(req,res)=>{
-    console.log("Manual User ID:", user._id)
+    
     let {email,password}=req.body;
     email=email.toLowerCase().trim();
     const user=await User.findOne({email});
@@ -35,7 +35,6 @@ router.post("/login",async(req,res)=>{
 
 
 router.post("/google", async (req, res) => {
-    console.log("Final User ID:", user._id);
     try {
         console.log("Google auth endpoint hit");
         console.log("GOOGLE_CLIENT_ID exists:", !!process.env.GOOGLE_CLIENT_ID);
