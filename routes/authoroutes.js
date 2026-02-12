@@ -25,6 +25,7 @@ router.post("/login",async(req,res)=>{
     email=email.toLowerCase().trim();
     const user=await User.findOne({email});
     if(!user) return res.status(400).json({msg:"Error"});
+    if (!user.password) return res.status(400).json({msg:"use Google lgin"})
     const pass=await bcrypt.compare(password,user.password);
     if(!pass) return res.status(400).json({msg:"Error"});
     const token=jwt.sign({id:user._id},process.env.JWT_SECRET);
@@ -36,8 +37,6 @@ router.post("/login",async(req,res)=>{
 
 router.post("/google", async (req, res) => {
     try {
-        console.log("Google auth endpoint hit");
-        console.log("GOOGLE_CLIENT_ID exists:", !!process.env.GOOGLE_CLIENT_ID);
 
         const { token } = req.body;
         console.log("Token received:", token ? "Yes" : "No");
@@ -72,18 +71,13 @@ router.post("/google", async (req, res) => {
 
         
         let user = await User.findOne({ email:normalizedEmail });
-        if (!user) {
-            console.log("Creating new user:", normalizedEmail);
-            user = await User.create({ 
-                email:normalizedEmail, 
-                googleid: sub 
-            });
-        } else {
-            console.log("Existing user found:", normalizedEmail);
-            if (!user.googleid){
-                user.googleid=sub;
-                await user.save();
+        if (user) {
+            if (!user.googleid) {
+            user.googleid = sub;
+            await user.save();
             }
+        } else {
+            user = await User.create({ email: normalizedEmail, googleid: sub });
         }
          
         const jwttoken = jwt.sign(
