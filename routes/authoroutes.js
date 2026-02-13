@@ -104,7 +104,7 @@ router.post("/google", async (req, res) => {
 
 });
 
-// Get current user info
+
 router.get("/me", async (req, res) => {
     try {
         const token = req.header("Authorization").replace("Bearer ", "");
@@ -113,6 +113,26 @@ router.get("/me", async (req, res) => {
         res.json(user);
     } catch (e) {
         res.status(401).send({ error: "Please authenticate." });
+    }
+});
+
+// Update user salary
+router.put("/salary", async (req, res) => {
+    try {
+        const { salary } = req.body;
+        const token = req.header("Authorization").replace("Bearer ", "");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findByIdAndUpdate(
+            decoded.id,
+            { salary: salary },
+            { new: true }
+        ).select("-password");
+
+        res.json(user);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send({ error: "Server Error" });
     }
 });
 
