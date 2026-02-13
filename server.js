@@ -9,12 +9,12 @@ import expenseRoutes from "./routes/expense.js"
 dotenv.config();
 cursor();
 
-const app=express();
+const app = express();
 app.use(cors({
-    origin:['https://saranrajbr.github.io', 'http://localhost:5173'],
-    credentials:true,
-    methods:['GET','POST','PUT','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type','Authorization']
+    origin: ['https://saranrajbr.github.io', 'http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -28,6 +28,8 @@ app.get("/api/test-env", (req, res) => {
     });
 });
 
-app.use("/api/auth",authRoutes);
-app.use("/api/expense",expenseRoutes);
-app.listen(2000,()=>console.log("server running"));
+app.use("/api/auth", authRoutes);
+app.use("/api/expense", expenseRoutes);
+import budgetRoutes from "./routes/budget.js";
+app.use("/api/budget", budgetRoutes);
+app.listen(2000, () => console.log("server running"));
