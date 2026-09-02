@@ -1,15 +1,21 @@
 import mongoose from "mongoose";
 
-const cursor=async()=>{
-    try{
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("db connected")
+const globalAny = global;
+if (!globalAny.__mongooseCache) {
+  globalAny.__mongooseCache = { conn: null, promise: null };
+}
 
-    }catch(err){
-        console.error(err);
-        process.exit(1)
-    }
-};
+const cached = globalAny.__mongooseCache;
 
+export default function connectDB() {
+  if (cached.conn) return cached.conn;
 
-export default cursor;
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(process.env.MONGO_URI).then((mongooseInstance) => {
+      cached.conn = mongooseInstance;
+      return mongooseInstance;
+    });
+  }
+
+  return cached.promise;
+}
