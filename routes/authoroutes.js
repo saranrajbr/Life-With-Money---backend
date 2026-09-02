@@ -70,8 +70,18 @@ router.post("/google", async (req, res) => {
         audience: process.env.GOOGLE_CLIENT_ID
       });
       payload = ticket.getPayload();
-    } catch {
-      // Fallback to userinfo exchange for access tokens (used by the legacy UI flow)
+    } catch (verifyErr) {
+      // The frontend sends an id_token via @react-oauth/google. If verification
+      // fails here, it is almost always an audience/client-id mismatch on the
+      // server. Only fall back to the userinfo exchange for actual access tokens.
+      const looksLikeIdToken = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token);
+      if (looksLikeIdToken) {
+        console.error("Google id_token verification failed:", verifyErr.message, {
+          configuredAudience: process.env.GOOGLE_CLIENT_ID
+        });
+        return res.status(401).json({ msg: "Google id_token could not be verified. Check the server GOOGLE_CLIENT_ID matches the frontend VITE_GOOGLE_CLIENT_ID." });
+      }
+      // Legacy fallback: treat as access token
       const userInfoResponse = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         { headers: { Authorization: `Bearer ${token}` } }
