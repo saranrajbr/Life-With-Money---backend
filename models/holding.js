@@ -42,8 +42,7 @@ const PortfolioHoldingSchema = new mongoose.Schema(
           type: Date,
           required: true,
           default: Date.now
-        },
-        _id: false
+        }
       }
     ],
     avgBuyPrice: {
@@ -53,6 +52,10 @@ const PortfolioHoldingSchema = new mongoose.Schema(
     totalQty: {
       type: Number,
       default: 0
+    },
+    currentPrice: {
+      type: Number,
+      default: null
     }
   },
   { timestamps: true }
